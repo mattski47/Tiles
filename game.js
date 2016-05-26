@@ -44,6 +44,7 @@ PIXI.loader
 	.add('map', "assets/worldmap.json")
 	.add('tileset', "assets/worldmap.png")
 	.add("assets/entities.json")
+	.add("music.mp3")
 	.load(ready);
 	
 function ready() {
@@ -62,9 +63,9 @@ function ready() {
 	instructionsButton = new PIXI.Sprite(PIXI.Texture.fromFrame("instructionsButton.png"));
 	returnHome = new PIXI.Sprite(PIXI.Texture.fromFrame("mainMenuButton.png"));
 	
-	//music = PIXI.audioManager.getAudio("music.mp3");
-	//music.loop = true;
-	//music.volume = 0.6;
+	music = PIXI.audioManager.getAudio("music.mp3");
+	music.loop = true;
+	music.volume = 0.6;
 	
 	stage.addChild(menuContainer);
 	currScene = new mainMenu();
@@ -73,7 +74,7 @@ function ready() {
 
 //main menu
 var mainMenu = function () {
-	//music.play();
+	music.play();
 	
 	onGame = false;
 	
@@ -82,11 +83,6 @@ var mainMenu = function () {
 	title.anchor.y = 0.5;
 	title.position.x = renderer.width/2;
 	title.position.y = 130;
-	
-	//background.anchor.x = 0.5;
-	//background.anchor.y = 0.5;
-	//background.position.x = renderer.width/2;
-	//background.position.y = renderer.height/2;
 	
 	//place play button
 	playButton.anchor.x = 0.5;
