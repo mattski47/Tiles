@@ -10,8 +10,68 @@
          "width":30,
          "x":0,
          "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "height":30,
+         "name":"Entities",
+         "objects":[
+                {
+                 "gid":57,
+                 "height":32,
+                 "id":75,
+                 "name":"loltres",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":32,
+                 "x":832,
+                 "y":704
+                }, 
+                {
+                 "gid":59,
+                 "height":32,
+                 "id":76,
+                 "name":"sidekick",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":32,
+                 "x":256,
+                 "y":704
+                }, 
+                {
+                 "gid":58,
+                 "height":32,
+                 "id":77,
+                 "name":"boat",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":32,
+                 "x":736,
+                 "y":193
+                }, 
+                {
+                 "gid":60,
+                 "height":32,
+                 "id":78,
+                 "name":"player",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":32,
+                 "x":224,
+                 "y":224
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "width":30,
+         "x":0,
+         "y":0
         }],
- "nextobjectid":75,
+ "nextobjectid":80,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tileheight":32,
@@ -47,6 +107,35 @@
              "0":
                 {
                  "id":"string"
+                }
+            },
+         "tilewidth":32
+        }, 
+        {
+         "columns":0,
+         "firstgid":57,
+         "margin":0,
+         "name":"entities",
+         "spacing":0,
+         "tilecount":4,
+         "tileheight":32,
+         "tiles":
+            {
+             "0":
+                {
+                 "image":"loltres.png"
+                },
+             "1":
+                {
+                 "image":"shipfront.png"
+                },
+             "2":
+                {
+                 "image":"sidekick.png"
+                },
+             "3":
+                {
+                 "image":"player.png"
                 }
             },
          "tilewidth":32

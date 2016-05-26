@@ -5,8 +5,6 @@ var renderer = PIXI.autoDetectRenderer(448, 448);
 gameport.appendChild(renderer.view);
 
 var stage = new PIXI.Container();
-stage.scale.x = scale;
-stage.scale.y = scale;
 
 var gameContainer = new PIXI.Container();
 var menuContainer = new PIXI.Container();
@@ -14,13 +12,14 @@ var endContainer = new PIXI.Container();
 var instructionsContainer = new PIXI.Container();
 var onGame = false;
 var style = {fill: "white"};
-var style2 = {font: '16px Arial', fill: "white", workWrap: true};
+var style2 = {font: '16px Arial', fill: "black", wordWrap: true, wordWrapWidth: 190};
 var creditsDisplay = new PIXI.Text("By: Matthew Siewierski", style);
-var instructionsDisplay = new PIXI.Text("How to Play:\n Use the left and right arrow keys or the 'a' and 'd' keys to rotate around the planet.\n You can fire your lasers by pressing space or the 'w' key.\n\n Goal:\n Stop the rocks from hitting the planet by destroying them with your laser.\n The number of lasers that can be on the screen at once is limited so use your shots wisely.\n You lose when enough rocks hit the planet to destroy it.", style2);
+var instructionsDisplay = new PIXI.Text("How to Play:\n\nUse 'wasd' to move around and find various items around the map. Once you think you have them all, go back to the house to return to the main menu.", style2);
 
 var playButton;
 var instructionsButton;
 var returnHome;
+var background;
 var title;
 
 var music;
@@ -28,76 +27,91 @@ var currScene;
 var player;
 var world;
 var person;
+var loltres;
+var boat;
+var shipfront;
+var shipback;
+var sidekick;
+var playerObject;
+var loltresObject;
+var shipObject;
+var sidekickObject;
+var entitiesLayer;
 
 	//.add("music.mp3")
 //load stuff 
 PIXI.loader
 	.add('map', "assets/worldmap.json")
 	.add('tileset', "assets/worldmap.png")
-	.add('person', "assets/world32.png")
+	.add("assets/entities.json")
 	.load(ready);
 	
 function ready() {
 	var tu = new TileUtilities(PIXI);
 	world = tu.makeTiledWorld("map", "assets/worldmap.png");
-	stage.addChild(world);
 	
-	player = new PIXI.Sprite(PIXI.loader.resources.person.texture);
-	
-	
-	//playButton = new PIXI.Sprite(PIXI.Texture.fromFrame("playButton.png"));
-	//instructionsButton = new PIXI.Sprite(PIXI.Texture.fromFrame("instructionsButton.png"));
+	player = new PIXI.Sprite(PIXI.Texture.fromFrame("player.png"));
+	loltres = new PIXI.Sprite(PIXI.Texture.fromFrame("loltres.png"));
+	boat = new PIXI.Sprite(PIXI.Texture.fromFrame("shipfront.png"));
+	shipfront = new PIXI.Sprite(PIXI.Texture.fromFrame("shipfront.png"));
+	shipback = new PIXI.Sprite(PIXI.Texture.fromFrame("shipback.png"));
+	sidekick = new PIXI.Sprite(PIXI.Texture.fromFrame("sidekick.png"));
+	background = new PIXI.Sprite(PIXI.Texture.fromFrame("background.png"));
+	title = new PIXI.Sprite(PIXI.Texture.fromFrame("title.png"));
+	playButton = new PIXI.Sprite(PIXI.Texture.fromFrame("playButton.png"));
+	instructionsButton = new PIXI.Sprite(PIXI.Texture.fromFrame("instructionsButton.png"));
+	returnHome = new PIXI.Sprite(PIXI.Texture.fromFrame("mainMenuButton.png"));
 	
 	//music = PIXI.audioManager.getAudio("music.mp3");
 	//music.loop = true;
 	//music.volume = 0.6;
 	
-	currScene = new playGame();
+	stage.addChild(menuContainer);
+	currScene = new mainMenu();
 	animate();
 }
 
-/*
 //main menu
 var mainMenu = function () {
-	music.play();
+	//music.play();
 	
-	creditsDisplay.anchor.x = 0.5;
-	creditsDisplay.anchor.y = 0.5;
-	creditsDisplay.position.x = renderer.width/2;
-	creditsDisplay.position.y = renderer.height-25;
+	onGame = false;
+	
 	
 	title.anchor.x = 0.5;
 	title.anchor.y = 0.5;
 	title.position.x = renderer.width/2;
 	title.position.y = 130;
 	
+	//background.anchor.x = 0.5;
+	//background.anchor.y = 0.5;
+	//background.position.x = renderer.width/2;
+	//background.position.y = renderer.height/2;
+	
 	//place play button
 	playButton.anchor.x = 0.5;
 	playButton.anchor.y = 0.5;
 	playButton.position.x = renderer.width/2;
-	playButton.position.y = renderer.height/2;
+	playButton.position.y = renderer.height/2+75;
 	
 	instructionsButton.anchor.x = 0.5;
 	instructionsButton.anchor.y = 0.5;
 	instructionsButton.position.x = renderer.width/2;
-	instructionsButton.position.y = renderer.height/2+100;
+	instructionsButton.position.y = renderer.height/2+150;
 	
+	menuContainer.addChild(background);
 	menuContainer.addChild(title);
 	menuContainer.addChild(playButton);
 	menuContainer.addChild(instructionsButton);
-	menuContainer.addChild(creditsDisplay);
-	menuContainer.addChild(playerSprite1);
 	
 	playButton.interactive = true;
 	instructionsButton.interactive = true;
 	
-	stage.addChild(menuContainer);
 	
 	playButton.mousedown = function(mouseData) {
 		menuContainer.removeChildren();
 		stage.removeChild(menuContainer);
 		stage.addChild(gameContainer);
-		menuMusic.stop();
 		currScene = new playGame();
 	}
 	
@@ -108,15 +122,14 @@ var mainMenu = function () {
 		currScene = new instructionsPage();
 	}
 }
-*/
 
 var left = 0;
 var right = 1;
 var up = 0;
 var down = 1;
 var stop = 2;
-var tilex = 7;
-var tiley = 6;
+var tilex;
+var tiley;
 
 //play game
 var playGame = function() {
@@ -124,15 +137,52 @@ var playGame = function() {
 	this.directionVer = stop;
 	this.movingHor = false;
 	this.movingVer = false;
+	this.hasloltres = false;
+	this.hasship = false;
+	this.hassidekick = false;
 	
+	gameContainer.addChild(world);
 	
-	player.x = renderer.width/2;
-	player.y = renderer.height/2;
-	player.anchor.x = 0;
-	player.anchor.y = 1.0;
+	tilex = 7;
+	tiley = 6;
 	
-	gameContainer.addChild(player);
-	stage.addChild(gameContainer);
+	stage.scale.x = scale;
+	stage.scale.y = scale;
+	
+	playerObject = world.getObject("player");
+	loltresObject = world.getObject("loltres");
+	shipObject = world.getObject("boat");
+	sidekickObject = world.getObject("sidekick");
+	
+	loltres.x = loltresObject.x;
+	loltres.y = loltresObject.y;
+	loltres.anchor.x = 0.0;
+	loltres.anchor.y = 1.0;
+	
+	boat.x = shipObject.x;
+	boat.y = shipObject.y;
+	boat.anchor.x = 0.0;
+	boat.anchor.y = 1.0;
+	
+	sidekick.x = sidekickObject.x;
+	sidekick.y = sidekickObject.y;
+	sidekick.anchor.x = 0.0;
+	sidekick.anchor.y = 1.0;
+	
+	player.x = playerObject.x;
+	player.y = playerObject.y;
+	player.anchor.x = 0.0;
+	player.anchor.y = 1.25;
+	
+	entitiesLayer = world.getObject("Entities");
+	entitiesLayer.addChild(loltres);
+	entitiesLayer.addChild(boat);
+	entitiesLayer.addChild(shipfront);
+	entitiesLayer.addChild(shipback);
+	entitiesLayer.addChild(sidekick);
+	entitiesLayer.addChild(player);
+	
+	shipback.visible = false;
 	
 	stage.x = -player.x*scale + renderer.width/2 - player.width/2*scale;
 	stage.y = -player.y*scale + renderer.height/2 + player.height/2*scale;
@@ -150,7 +200,7 @@ playGame.prototype.moveHor = function() {
 	currScene.movingHor = true;
 	
 	if (currScene.directionHor == left) {
-		if (tilex == 3 || (tilex == 7 && (tiley == 21 || tiley == 22 || tiley == 24)) || (tilex == 9 && tiley == 24) || (tilex == 11 && tiley >= 18 && tiley <= 23) || (tilex == 18 && tiley >= 8 && tiley <= 10) || (tilex == 19 && tiley >= 17) || (tilex == 21 && tiley >= 19 && tiley <= 25) || (tilex == 22 && tiley == 16) || (tilex == 23 && (tiley == 4 || tiley == 5 || tiley == 19 || (tiley >= 21 && tiley <= 25))) || (tilex == 25 && tiley == 10) || (tilex == 26 && (tiley == 8 || tiley == 9 || tiley == 18 || (tiley >= 21 && tiley <= 23)))) {
+		if (tilex == 3 || (tilex == 7 && tiley >= 21 && tiley <= 24) || (tilex == 9 && tiley == 24) || (tilex == 11 && tiley >= 18 && tiley <= 23) || (tilex == 18 && tiley >= 8 && tiley <= 10) || (tilex == 19 && tiley >= 17) || (tilex == 21 && tiley >= 19 && tiley <= 25) || (tilex == 22 && tiley == 16) || (tilex == 23 && (tiley == 4 || tiley == 5 || tiley == 19 || (tiley >= 21 && tiley <= 25))) || (tilex == 25 && tiley == 10) || (tilex == 26 && (tiley == 8 || tiley == 9 || tiley == 18 || (tiley >= 21 && tiley <= 23)))) {
 			currScene.movingHor = false;
 			return;
 		}
@@ -158,9 +208,12 @@ playGame.prototype.moveHor = function() {
 		createjs.Tween.get(player).to({x: player.x - 32}, 250).call(currScene.moveHor);
 	}
 	if (currScene.directionHor == right) {
-		if (tilex == 26 || (tilex == 4 && tiley >= 19 && tiley <= 23) || (tilex == 5 && (tiley == 18 || tiley == 24)) || (tilex == 7 && (tiley == 22 || tiley == 24)) || (tilex == 8 && tiley == 21) || (tilex == 14 && tiley >= 8 && tiley <= 10) || (tilex == 17 && tiley >= 16) || (tilex == 19 && ((tiley >= 5 && tiley <= 7) || (tiley >= 18 && tiley <= 25))) || (tilex == 20 && tiley == 4) || (tilex == 21 && ((tiley >= 8 && tiley <= 10) || (tiley >= 19 && tiley <= 25))) || (tilex == 22 && tiley == 16) || (tilex == 23 && tiley >= 3 && tiley <= 5) || (tilex == 24 && tiley >= 21 && tiley <= 23)) {
+		if (tilex == 26 || (tilex == 4 && tiley >= 19 && tiley <= 23) || (tilex == 5 && (tiley == 18 || tiley == 24)) || (tilex == 7 && tiley >= 22 && tiley <= 24) || (tilex == 8 && tiley == 21) || (tilex == 14 && tiley >= 8 && tiley <= 10) || (tilex == 17 && tiley >= 16) || (tilex == 19 && ((tiley >= 5 && tiley <= 7) || (tiley >= 18 && tiley <= 25))) || (tilex == 20 && tiley == 4) || (tilex == 21 && ((tiley >= 8 && tiley <= 10) || (tiley >= 19 && tiley <= 25))) || (tilex == 22 && tiley == 16) || (tilex == 23 && tiley >= 3 && tiley <= 5) || (tilex == 24 && tiley >= 21 && tiley <= 23)) {
 			currScene.movingHor = false;
 			return;
+		} else if (tilex == 7 && tiley == 21 && currScene.hassidekick == false) {
+			entitiesLayer.removeChild(sidekick);
+			currScene.hassidekick = true;
 		}
 		createjs.Tween.get(player).to({x: player.x + 32}, 250).call(currScene.moveHor);
 		tilex++;
@@ -170,27 +223,74 @@ playGame.prototype.moveHor = function() {
 
 playGame.prototype.moveVer = function() {
 	if (currScene.directionVer == stop) {
+		
 		currScene.movingVer = false;
 		return;
+	}
+	
+	if (shipback.visible) {
+		shipback.visible = false;
+		player.visible = true;
+	}
+	
+	if (shipfront.visible) {
+		shipfront.visible = false;
+		player.visible = true;
 	}
 	
 	currScene.movingVer = true;
 	
 	if (currScene.directionVer == up) {
-		if (tiley == 3 || (tiley == 8 && (tilex == 20 || tilex == 21 || tilex == 26)) || (tiley == 10 && tilex == 25) || (tiley == 11 && ((tilex >= 15 && tilex <= 17) || (tilex >= 22 && tilex <= 24))) || (tiley == 17 && ((tilex >= 19 && tilex <= 21) || (tilex >= 23))) || (tiley == 19 && (tilex == 21 || (tilex >= 23 && tilex <= 25))) || (tiley == 21 && (tilex == 7 || tilex == 8 || tilex == 23 || tilex == 24 || tilex == 26)) || (tiley == 24 && (tilex == 5 || tilex == 7 || tilex == 9 || tilex == 10 || tilex == 25)) || (tiley == 25 && (tilex == 6 || tilex == 8)) || (tiley == 26 && (tilex == 20 || tilex == 22))) {
+		if (tiley == 3 || (tiley == 8 && (tilex == 20 || tilex == 21 || tilex == 26)) || (tiley == 10 && tilex == 25) || (tiley == 11 && ((tilex == 15 || (tilex == 16 && (currScene.hasloltres == false || currScene.hassidekick == false)) || tilex == 17) || (tilex >= 22 && tilex <= 24))) || (tiley == 17 && ((tilex >= 19 && tilex <= 21) || (tilex >= 23))) || (tiley == 19 && (tilex == 21 || (tilex >= 23 && tilex <= 25))) || (tiley == 21 && (tilex == 7 || tilex == 8 || tilex == 23 || tilex == 24 || tilex == 26)) || (tiley == 24 && (tilex == 5 || (tilex == 7 && currScene.hasship == false) || tilex == 9 || tilex == 10 || tilex == 25)) || (tiley == 25 && (tilex == 6 || tilex == 8)) || (tiley == 26 && (tilex == 20 || tilex == 22))) {
 			currScene.movingVer = false;
 			return;
+		} else if (tiley == 22 && tilex == 26 && currScene.hasloltres == false) {
+			entitiesLayer.removeChild(loltres);
+			currScene.hasloltres = true;
+			tiley--;
+			createjs.Tween.get(player).to({y: player.y - 32}, 250).call(currScene.moveVer);
+		} else if (tiley == 11 & tilex == 16 && currScene.hasloltres && currScene.hassidekick) {
+			entitiesLayer.removeChildren();
+			gameContainer.removeChildren();
+			stage = new PIXI.Container();
+			stage.addChild(menuContainer);
+			currScene = new mainMenu();
+		} else if (tilex == 7 && tiley == 24 && currScene.hasship) {
+			shipback.x = player.x;
+			shipback.y = player.y-32;
+			player.visible = false;
+			shipback.visible = true;
+			tiley -= 2;
+			createjs.Tween.get(shipback).to({y: shipback.y - 64}, 500);
+			createjs.Tween.get(player).to({y: player.y - 64}, 500).call(currScene.moveVer);
+		} else {
+			tiley--;
+			createjs.Tween.get(player).to({y: player.y - 32}, 250).call(currScene.moveVer);
 		}
-		tiley--;
-		createjs.Tween.get(player).to({y: player.y - 32}, 250).call(currScene.moveVer);
+		
 	}
+	
 	if (currScene.directionVer == down) {
-		if (tiley == 26 || (tiley == 3 && (tilex == 21 || tilex == 22)) || (tiley == 4 && tilex == 20) || (tiley == 5 && tilex == 23) || (tiley == 7 && tilex >= 15 && tilex <= 17) || (tiley == 15 && ((tilex >= 18 && tilex <= 21) || tilex >= 23)) || (tiley == 17 && ((tilex >= 6 && tilex <= 10) || (tilex >= 20 && tilex <= 25))) || (tiley == 18 && tilex == 5) || (tiley == 19 && tilex >= 23) || (tiley == 21 && tilex == 8) || (tiley == 22 && tilex == 7)) {
+		if (tiley == 26 || (tiley == 3 && (tilex == 21 || tilex == 22)) || (tiley == 4 && tilex == 20) || (tiley == 5 && tilex == 23) || (tiley == 7 && tilex >= 15 && tilex <= 17) || (tiley == 15 && ((tilex >= 18 && tilex <= 21) || tilex >= 23)) || (tiley == 17 && ((tilex >= 6 && tilex <= 10) || (tilex >= 20 && tilex <= 25))) || (tiley == 18 && tilex == 5) || (tiley == 19 && tilex >= 23) || (tiley == 21 && tilex == 8) || (tiley == 22 && tilex == 7 && currScene.hasship == false)) {
 			currScene.movingVer = false;
 			return;
+		} else if (tiley == 4 && tilex == 23 && currScene.hasship == false) {
+			entitiesLayer.removeChild(boat);
+			currScene.hasship = true;
 		}
-		tiley++;
-		createjs.Tween.get(player).to({y: player.y + 32}, 250).call(currScene.moveVer);
+		
+		if (tilex == 7 && tiley == 22 && currScene.hasship) {
+			shipfront.x = player.x;
+			shipfront.y = player.y-32;
+			player.visible = false;
+			shipfront.visible = true;
+			tiley += 2;
+			createjs.Tween.get(shipfront).to({y: shipfront.y + 64}, 500);
+			createjs.Tween.get(player).to({y: player.y + 64}, 500).call(currScene.moveVer);
+		} else {
+			tiley++;
+			createjs.Tween.get(player).to({y: player.y + 32}, 250).call(currScene.moveVer);
+		}
 	}
 }
 
@@ -199,56 +299,10 @@ playGame.prototype.updateCamera = function() {
 	stage.y = -player.y*scale + renderer.height/2 + player.height/2*scale;
 }
 
-playGame.prototype.checkCollision = function() {
-	
-}
-
-/*
-var endScreen = function() {
-	returnHome.anchor.x = 0.5;
-	returnHome.anchor.y = 0.5;
-	returnHome.position.x = renderer.width/2;
-	returnHome.position.y = renderer.height/2 + 200;
-	
-	gameOver.anchor.x = 0.5;
-	gameOver.anchor.y = 0.5;
-	gameOver.position.x = renderer.width/2;
-	gameOver.position.y = renderer.height/2 - 200;
-	
-	explosionContainer.removeChildren();
-	gameContainer.removeChildren();
-	endContainer.addChild(planetSprite);
-	endContainer.addChild(scoreDisplay);
-	endContainer.addChild(returnHome);
-	endContainer.addChild(gameOver);
-	
-	stage.removeChild(gameContainer);
-	stage.addChild(endContainer);
-	
-	returnHome.interactive = true;
-	returnHome.mousedown = function(mouseData) {
-		stage.removeChild(endContainer);
-		stage.addChild(menuContainer);
-		gameMusic.stop();
-		currScene = new mainMenu();
-	}
-}
-
 var instructionsPage = function() {
-	instructionsDisplay.position.x = 10;
-	instructionsDisplay.position.y = 10;
+	instructionsDisplay.position.x = 12;
+	instructionsDisplay.position.y = 40;
 	
-	planetSprite = new PIXI.Sprite(planets[0]);
-	
-	planetSprite.anchor.x = 0.5;
-	planetSprite.anchor.y = 0.5;
-	planetSprite.position.x = renderer.width/2;
-	planetSprite.position.y = renderer.height/2;
-	
-	playerSprite1.anchor.x = 0.5;
-	playerSprite1.anchor.y = 0.5;
-	playerSprite1.position.x = renderer.width/2;
-	playerSprite1.position.y = renderer.height/2-100;
 	
 	returnHome.anchor.x = 0.5;
 	returnHome.anchor.y = 0.5;
@@ -263,12 +317,10 @@ var instructionsPage = function() {
 		currScene = new mainMenu();
 	}
 	
-	instructionsContainer.addChild(planetSprite);
-	instructionsContainer.addChild(playerSprite1);
+	instructionsContainer.addChild(background);
 	instructionsContainer.addChild(returnHome);
 	instructionsContainer.addChild(instructionsDisplay);
 }
-*/
 
 function keydownEventHandler(e) {
 	e.preventDefault();
@@ -317,7 +369,10 @@ function keyupEventHandler(e) {
 
 function animate() {
 	requestAnimationFrame(animate);
-	currScene.updateCamera();
+	
+	if (onGame) {
+		currScene.updateCamera();
+	}
 	
 	renderer.render(stage);
 }
